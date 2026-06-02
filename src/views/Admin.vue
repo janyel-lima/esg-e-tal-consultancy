@@ -125,12 +125,12 @@
 
         <div class="mt-4 text-center">
           <button 
-            @click="showKeysModal = true" 
-            class="mx-auto bg-transparent hover:text-[#10B981] text-xs font-bold transition-colors flex items-center justify-center gap-1 cursor-pointer hover:underline border-none"
+            @click="openPasswordReset" 
+            class="mx-auto bg-transparent hover:text-[#10B981] text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer hover:underline border-none"
             :class="store.darkMode ? 'text-slate-500' : 'text-slate-400'"
           >
-            <i class="fa-solid fa-key text-[10px]"></i>
-            <span>Configurar chaves Firebase</span>
+            <i class="fa-solid fa-unlock-keyhole text-[10px]"></i>
+            <span>Esqueceu sua senha? / Recuperação</span>
           </button>
         </div>
       </div>
@@ -3272,43 +3272,55 @@
       ESG e Tal Admin CMS Portal — Built securely with Vue 3 & Pinia state sync.
     </footer>
 
-    <!-- ── FIREBASE KEY BUILDER MODAL DIALOG ── -->
-    <div v-if="showKeysModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-[2000] flex items-center justify-center p-4">
-      <div class="bg-slate-950 border border-white/10 rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl relative">
-        <h3 class="font-display font-bold text-lg text-[#10B981] mb-2 flex items-center gap-1.5 justify-center sm:justify-start">
-          <i class="fa-solid fa-key"></i>
-          <span>Vincular Credenciais Firebase</span>
+    <!-- ── FIREBASE PASSWORD RESET MODAL DIALOG ── -->
+    <div v-if="showResetModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-[2000] flex items-center justify-center p-4">
+      <div 
+        class="border rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl relative transition-all duration-300"
+        :class="store.darkMode 
+          ? 'bg-slate-950/95 border-white/10 text-slate-100' 
+          : 'bg-white border-slate-200 text-slate-800'"
+      >
+        <h3 class="font-display font-bold text-lg mb-2 flex items-center gap-1.5 justify-center sm:justify-start" :class="store.darkMode ? 'text-[#10B981]' : 'text-emerald-600'">
+          <i class="fa-solid fa-unlock-keyhole"></i>
+          <span>Recuperar Senha</span>
         </h3>
-        <p class="text-xs text-slate-400 mb-6 text-center sm:text-left leading-relaxed">
-          Cole chaves de seu aplicativo registradas no console Firebase Realtime. Nós salvaremos e iniciaremos em tempo real.
+        <p class="text-xs mb-6 text-center sm:text-left leading-relaxed" :class="store.darkMode ? 'text-slate-400' : 'text-slate-500'">
+          Insira seu e-mail de administrador abaixo. Enviaremos um link do Firebase Auth para redefinir sua senha.
         </p>
 
-        <div class="space-y-3.5 mb-6 text-xs text-slate-300">
+        <div class="space-y-4 mb-6 text-xs pl-1">
           <div>
-            <label class="block text-[9px] font-black uppercase text-slate-400 mb-1">API Key</label>
-            <input type="text" v-model="credForm.apiKey" placeholder="AIzaSy..." class="w-full p-2 rounded bg-white/5 border border-white/10 text-white outline-none focus:border-[#10B981]" />
+            <label class="block text-[10px] font-bold uppercase tracking-wider mb-1.5" :class="store.darkMode ? 'text-slate-400' : 'text-slate-500'">E-mail para Recuperação</label>
+            <input 
+              type="email" 
+              v-model="resetEmail" 
+              placeholder="admin@esgetal.com.br" 
+              class="w-full py-2.5 px-4 rounded-xl text-xs font-semibold outline-none focus:border-[#10B981] transition-all"
+              :class="store.darkMode ? 'bg-white/5 border-white/10 text-white' : 'bg-slate-50 border-slate-200 text-slate-800'"
+              @keyup.enter="handlePasswordReset"
+            />
           </div>
-          <div>
-            <label class="block text-[9px] font-black uppercase text-slate-400 mb-1">Auth Domain</label>
-            <input type="text" v-model="credForm.authDomain" placeholder="seu-projeto.firebaseapp.com" class="w-full p-2 rounded bg-white/5 border border-white/10 text-white outline-none focus:border-[#10B981]" />
-          </div>
-          <div>
-            <label class="block text-[9px] font-black uppercase text-slate-400 mb-1">Database Realtime URL</label>
-            <input type="text" v-model="credForm.databaseURL" placeholder="https://seu-projeto-default-rtdb.firebaseio.com" class="w-full p-2 rounded bg-white/5 border border-white/10 text-white outline-none focus:border-[#10B981]" />
-          </div>
-          <div>
-            <label class="block text-[9px] font-black uppercase text-slate-400 mb-1">Project ID</label>
-            <input type="text" v-model="credForm.projectId" placeholder="seu-projeto" class="w-full p-2 rounded bg-white/5 border border-white/10 text-white outline-none focus:border-[#10B981]" />
-          </div>
+
+          <p v-if="resetErrorMessage" class="text-xs text-red-500 font-semibold">{{ resetErrorMessage }}</p>
+          <p v-if="resetSuccessMessage" class="text-xs text-emerald-500 font-semibold">{{ resetSuccessMessage }}</p>
         </div>
 
         <div class="flex gap-3 justify-end text-xs font-bold">
-          <button @click="showKeysModal = false" class="px-4 py-2 border border-white/10 rounded-lg hover:bg-white/5 transition-all text-slate-400 cursor-pointer">
+          <button 
+            @click="showResetModal = false" 
+            class="px-4 py-2.5 border rounded-xl hover:bg-neutral-500/10 transition-all cursor-pointer bg-transparent border-slate-200 dark:border-white/10"
+            :class="store.darkMode ? 'text-slate-400' : 'text-slate-600'"
+          >
             Cancelar
           </button>
           
-          <button @click="saveKeys" class="px-4 py-2 bg-[#10B981] hover:bg-[#059669] text-white rounded-lg transition-all cursor-pointer">
-            Salvar e Aplicar
+          <button 
+            @click="handlePasswordReset" 
+            :disabled="isSendingReset"
+            class="px-5 py-2.5 bg-[#10B981] hover:bg-[#059669] text-white rounded-xl transition-all cursor-pointer border-none flex items-center justify-center gap-1.5"
+          >
+            <span v-if="isSendingReset" class="w-3.5 h-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin"></span>
+            <span v-else>Enviar Link</span>
           </button>
         </div>
       </div>
@@ -3612,7 +3624,7 @@
 import { ref, computed, watch, reactive, onMounted, onUnmounted } from 'vue';
 import { useEsgStore } from '../stores/esgStore';
 import { auth, isConfigured } from '../firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import AdminNewsTab from '../components/admin/AdminNewsTab.vue';
 import AdminResearchTab from '../components/admin/AdminResearchTab.vue';
 import AdminNavbarTab from '../components/admin/AdminNavbarTab.vue';
@@ -4055,6 +4067,13 @@ const loginPassword = ref('');
 const logoutPass = ref('');
 const isLoggingIn = ref(false);
 const loginError = ref('');
+
+// Firebase Password Reset states
+const showResetModal = ref(false);
+const resetEmail = ref('');
+const isSendingReset = ref(false);
+const resetSuccessMessage = ref('');
+const resetErrorMessage = ref('');
 
 // Firebase Credential Form fields
 const showKeysModal = ref(false);
@@ -4776,13 +4795,48 @@ onMounted(() => {
 });
 
 // Authentication actions
+const openPasswordReset = () => {
+  resetEmail.value = loginEmail.value;
+  resetSuccessMessage.value = '';
+  resetErrorMessage.value = '';
+  showResetModal.value = true;
+};
+
+const handlePasswordReset = async () => {
+  if (!resetEmail.value) {
+    resetErrorMessage.value = 'Por favor, insira o e-mail cadastrado.';
+    return;
+  }
+  isSendingReset.value = true;
+  resetErrorMessage.value = '';
+  resetSuccessMessage.value = '';
+  try {
+    if (!isConfigured || !auth) {
+      throw new Error('O Firebase não está configurado para envio de e-mails.');
+    }
+    await sendPasswordResetEmail(auth, resetEmail.value);
+    resetSuccessMessage.value = 'E-mail de recuperação enviado com sucesso! Verifique sua caixa de entrada.';
+  } catch (err: any) {
+    console.error(err);
+    if (err.code === 'auth/user-not-found') {
+      resetErrorMessage.value = 'Usuário não encontrado com este e-mail.';
+    } else if (err.code === 'auth/invalid-email') {
+      resetErrorMessage.value = 'Formato de e-mail inválido.';
+    } else {
+      resetErrorMessage.value = err.message || 'Erro ao enviar e-mail de recuperação.';
+    }
+  } finally {
+    isSendingReset.value = false;
+  }
+};
+
 const signIn = async () => {
   if (!loginEmail.value || !loginPassword.value) {
     loginError.value = "Insira as credenciais de autenticação.";
     return;
   }
   if (!isConfigured || !auth) {
-    loginError.value = "Firebase não foi configurado. Use o botão Configurar no rodapé primeiro.";
+    loginError.value = "O Firebase não está configurado. Verifique os segredos ou variáveis de ambiente.";
     return;
   }
 
