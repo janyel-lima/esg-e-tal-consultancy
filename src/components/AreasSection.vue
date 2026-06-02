@@ -27,7 +27,7 @@
         <div 
           v-for="area in store.areas" 
           :key="area.key"
-          @click="store.openAreaModal(area.key)"
+          @click="store.openAreaModal(area.key); store.trackEvent('section_' + area.key)"
           class="group bg-white dark:bg-[#0F1E30] border border-neutral-200/50 dark:border-white/5 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1.5 cursor-pointer transition-all duration-350 flex flex-col h-full"
         >
           <!-- Thin Dynamic Top Bar Accent -->

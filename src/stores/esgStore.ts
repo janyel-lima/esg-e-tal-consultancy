@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { db, auth, isConfigured } from '../firebase';
-import { ref as dbRef, onValue, set, update, remove } from 'firebase/database';
+import { ref as dbRef, onValue, set, update, remove, increment } from 'firebase/database';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { 
   AreaGroup, LocalizedTexts, DynamicNewsItem, 
@@ -391,6 +391,21 @@ export const useEsgStore = defineStore('esg', {
         unsubscribeTemplateId: '',
         newItemTemplateId: '',
       },
+
+      // Live tracked metrics for site visits and interactions
+      metrics: {
+        visits: 0,
+        contact_whatsapp: 0,
+        contact_email: 0,
+        contact_form_submit: 0,
+        download_book: 0,
+        newsletter_submit: 0,
+        section_env: 0,
+        section_social: 0,
+        section_gov: 0,
+        section_comm: 0,
+      },
+      dailyMetrics: {} as Record<string, Record<string, number>>,
     };
   },
 
@@ -541,6 +556,82 @@ export const useEsgStore = defineStore('esg', {
 
     resolveAsset(path: string | undefined | null): string {
       return resolveAsset(path);
+    },
+
+    trackEvent(eventKey: string) {
+      const date = new Date();
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const dateStr = `${year}-${month}-${day}`;
+
+      // Offline or Sandbox increment
+      if (this.metrics && typeof (this.metrics as any)[eventKey] === 'number') {
+        (this.metrics as any)[eventKey]++;
+      }
+      if (!this.dailyMetrics) {
+        this.dailyMetrics = {};
+      }
+      if (!this.dailyMetrics[dateStr]) {
+        this.dailyMetrics[dateStr] = {};
+      }
+      this.dailyMetrics[dateStr][eventKey] = (this.dailyMetrics[dateStr][eventKey] || 0) + 1;
+
+      if (!isConfigured || !db) {
+        return;
+      }
+      try {
+        const metricRef = dbRef(db, `metrics/${eventKey}`);
+        set(metricRef, increment(1));
+
+        const dailyRef = dbRef(db, `daily_metrics/${dateStr}/${eventKey}`);
+        set(dailyRef, increment(1));
+      } catch (err) {
+        console.warn("Error tracking event:", eventKey, err);
+      }
+    },
+
+    resetMetrics() {
+      if (!isConfigured || !db) {
+        this.metrics = {
+          visits: 0,
+          contact_whatsapp: 0,
+          contact_email: 0,
+          contact_form_submit: 0,
+          download_book: 0,
+          newsletter_submit: 0,
+          section_env: 0,
+          section_social: 0,
+          section_gov: 0,
+          section_comm: 0,
+        };
+        this.dailyMetrics = {};
+        this.addToast("Métricas zeradas no modo offline", "success");
+        return;
+      }
+      try {
+        const metricsRef = dbRef(db, 'metrics');
+        set(metricsRef, {
+          visits: 0,
+          contact_whatsapp: 0,
+          contact_email: 0,
+          contact_form_submit: 0,
+          download_book: 0,
+          newsletter_submit: 0,
+          section_env: 0,
+          section_social: 0,
+          section_gov: 0,
+          section_comm: 0,
+        });
+
+        const dailyRef = dbRef(db, 'daily_metrics');
+        set(dailyRef, null);
+
+        this.addToast("Todas as métricas foram zeradas com sucesso!", "success");
+      } catch (err) {
+        console.error("Error resetting metrics:", err);
+        this.addToast("Erro ao zerar métricas no Firebase.", "error");
+      }
     },
 
     // ── Firebase Realtime Sync ────────────────────────────────────────────────
@@ -786,6 +877,52 @@ export const useEsgStore = defineStore('esg', {
       }, (error) => {
         this.firebaseStatus = 'Erro';
         console.error("Firebase Realtime Database read failed:", error);
+      });
+
+      // Listen to live metrics
+      const metricsRef = dbRef(db, 'metrics');
+      onValue(metricsRef, (snapshot) => {
+        const val = snapshot.val();
+        if (val) {
+          this.metrics = {
+            visits: val.visits || 0,
+            contact_whatsapp: val.contact_whatsapp || 0,
+            contact_email: val.contact_email || 0,
+            contact_form_submit: val.contact_form_submit || 0,
+            download_book: val.download_book || 0,
+            newsletter_submit: val.newsletter_submit || 0,
+            section_env: val.section_env || 0,
+            section_social: val.section_social || 0,
+            section_gov: val.section_gov || 0,
+            section_comm: val.section_comm || 0,
+          };
+        }
+      }, (error) => {
+        console.warn("Firebase metrics read failed:", error);
+      });
+
+      // Listen to daily breakdown metrics
+      const dailyRef = dbRef(db, 'daily_metrics');
+      onValue(dailyRef, (snapshot) => {
+        const val = snapshot.val();
+        if (val) {
+          this.dailyMetrics = val;
+        } else {
+          this.dailyMetrics = {};
+        }
+      }, (error) => {
+        console.warn("Firebase daily metrics read failed:", error);
+      });
+
+      // Listen to global newsletter config in real time
+      const configRef = dbRef(db, 'newsletterConfig');
+      onValue(configRef, (snapshot) => {
+        const val = snapshot.val();
+        if (val) {
+          this.newsletterConfig = { ...this.newsletterConfig, ...val };
+        }
+      }, (error) => {
+        console.warn("Firebase newsletter config read failed:", error);
       });
     },
 

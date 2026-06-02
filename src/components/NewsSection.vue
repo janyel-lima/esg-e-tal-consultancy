@@ -152,6 +152,7 @@
                     href="https://esgetal.com.br" 
                     target="_blank" 
                     rel="noopener"
+                    @click="store.trackEvent('download_book')"
                     class="block opacity-90 hover:opacity-100 hover:scale-[1.02] transition-all"
                   >
                     <img 
@@ -462,6 +463,7 @@ const submitNewsletter = async () => {
   loading.value = true;
   try {
     await store.subscribeToNewsletter(newsletterName.value, newsletterEmail.value);
+    store.trackEvent('newsletter_submit');
     newsletterSent.value = true;
     unsubscribeDone.value = false;
   } catch (error) {

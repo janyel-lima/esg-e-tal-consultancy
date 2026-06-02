@@ -65,6 +65,7 @@
                 href="https://wa.me/5511987308730" 
                 target="_blank" 
                 rel="noopener"
+                @click="store.trackEvent('contact_whatsapp')"
                 class="flex items-center justify-center gap-2 w-full px-6 py-3.5 bg-[#10B981] hover:bg-[#059669] text-white font-bold text-xs md:text-sm rounded-full shadow-md hover:shadow-[#10B981]/30 hover:-translate-y-0.5 transition-all duration-300"
               >
                 <i class="fa-brands fa-whatsapp text-base"></i>
@@ -73,6 +74,7 @@
 
               <a 
                 href="mailto:contato@esgetal.com.br" 
+                @click="store.trackEvent('contact_email')"
                 class="flex items-center justify-center gap-2 w-full px-6 py-3.5 border hover:border-[#10B981] bg-white/5 font-bold text-xs md:text-sm rounded-full transition-all duration-300"
                 :class="store.darkMode 
                   ? 'border-white/10 text-[#E8EFF6] hover:text-[#10B981]' 

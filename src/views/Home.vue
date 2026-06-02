@@ -82,7 +82,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue';
 import Navbar from '../components/Navbar.vue';
 import Hero from '../components/Hero.vue';
 import NewsSection from '../components/NewsSection.vue';
@@ -95,6 +95,14 @@ import Modal from '../components/Modal.vue';
 import { useEsgStore } from '../stores/esgStore';
 
 const store = useEsgStore();
+
+// Track visitor once per session/tab when mounting Home component
+onMounted(() => {
+  if (typeof sessionStorage !== 'undefined' && !sessionStorage.getItem('esg_visited')) {
+    sessionStorage.setItem('esg_visited', 'true');
+    store.trackEvent('visits');
+  }
+});
 
 // Dynamic computation of ordered active sections on home page
 const activeSections = computed(() => {
