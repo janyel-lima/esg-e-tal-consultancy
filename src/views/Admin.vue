@@ -255,6 +255,16 @@
                     {{ p.name }}
                   </button>
                 </div>
+                
+                <!-- Toggle Mode Demonstration -->
+                <label class="flex items-center gap-2 cursor-pointer select-none bg-slate-100 hover:bg-slate-200/85 dark:bg-white/5 dark:hover:bg-white/10 py-1.5 px-3 rounded-xl transition-all">
+                  <input 
+                    type="checkbox" 
+                    v-model="isDemoMode" 
+                    class="h-3.5 w-3.5 accent-[#10B981] cursor-pointer"
+                  />
+                  <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400">Modo Demonstrativo (Demo)</span>
+                </label>
 
                 <!-- Custom Period Calendars -->
                 <div v-if="selectedPeriod === 'custom'" class="flex items-center gap-2 slide-in transition-all">
@@ -338,7 +348,9 @@
                   </div>
                 </div>
                 <div class="text-3xl font-display font-black tracking-tight mb-2">{{ periodVisitsTotal }}</div>
-                <p class="text-[10px] text-slate-500">Total acumulado para o período selecionado.</p>
+                <p class="text-[10px]" :class="isDemoMode ? 'text-amber-500 font-medium' : 'text-slate-500'">
+                  {{ isDemoMode ? 'Mostrando visitas demonstrativas.' : 'Visitas reais capturadas em tempo real.' }}
+                </p>
               </div>
 
               <!-- Clicks on Actions Card -->
@@ -352,7 +364,9 @@
                 <div class="text-3xl font-display font-black tracking-tight mb-2">
                   {{ periodInteractionsTotal }}
                 </div>
-                <p class="text-[10px] text-slate-500">Cliques combinados em WhatsApp, Email, Obras e Newsletter.</p>
+                <p class="text-[10px]" :class="isDemoMode ? 'text-amber-500 font-medium' : 'text-slate-500'">
+                  {{ isDemoMode ? 'Dados demonstrativos de engajamento.' : 'Cliques consolidados de interações reais.' }}
+                </p>
               </div>
 
               <!-- Interações com Áreas Card -->
@@ -366,7 +380,9 @@
                 <div class="text-3xl font-display font-black tracking-tight mb-2">
                   {{ periodSectionsTotal }}
                 </div>
-                <p class="text-[10px] text-slate-500">Cliques na abertura de Meio Ambiente, Social, Governança e Comunicação.</p>
+                <p class="text-[10px]" :class="isDemoMode ? 'text-amber-500 font-medium' : 'text-slate-500'">
+                  {{ isDemoMode ? 'Interesses demonstrativos nas abas.' : 'Visualizações reais de seções do portal.' }}
+                </p>
               </div>
             </div>
 
@@ -380,9 +396,9 @@
                   <i class="fa-solid fa-chart-area text-[#10B981]"></i>
                   <span>Curva Temporal de Tráfego & Engajamento</span>
                 </h4>
-                <div class="flex items-center gap-1.5 text-[9px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider" :class="store.darkMode ? 'bg-white/5 text-emerald-400' : 'bg-emerald-50 text-emerald-700'">
-                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                  <span>Escala em Tempo Real</span>
+                <div class="flex items-center gap-1.5 text-[9px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider" :class="isDemoMode ? 'bg-amber-400/10 text-amber-500' : (store.darkMode ? 'bg-white/5 text-emerald-400' : 'bg-emerald-50 text-emerald-700')">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" :class="isDemoMode ? 'bg-amber-400' : 'bg-[#10B981]'"></span>
+                  <span>{{ isDemoMode ? 'Modo de Demonstração Ativo' : 'Métricas Reais do Portal' }}</span>
                 </div>
               </div>
 
@@ -4406,6 +4422,7 @@ const customStartDate = ref('');
 const customEndDate = ref('');
 const chartCanvasRef = ref<HTMLCanvasElement | null>(null);
 let chartInstance: Chart | null = null;
+const isDemoMode = ref(!store.isConfigured);
 
 const computedStatsForPeriod = computed(() => {
   const list = [];
@@ -4444,16 +4461,16 @@ const computedStatsForPeriod = computed(() => {
 
     return {
       date: dateStr,
-      visits: typeof liveObj.visits === 'number' ? liveObj.visits : seededVal('visits'),
-      contact_whatsapp: typeof liveObj.contact_whatsapp === 'number' ? liveObj.contact_whatsapp : seededVal('contact_whatsapp'),
-      contact_email: typeof liveObj.contact_email === 'number' ? liveObj.contact_email : seededVal('contact_email'),
-      contact_form_submit: typeof liveObj.contact_form_submit === 'number' ? liveObj.contact_form_submit : seededVal('contact_form_submit'),
-      download_book: typeof liveObj.download_book === 'number' ? liveObj.download_book : seededVal('download_book'),
-      newsletter_submit: typeof liveObj.newsletter_submit === 'number' ? liveObj.newsletter_submit : seededVal('newsletter_submit'),
-      section_env: typeof liveObj.section_env === 'number' ? liveObj.section_env : seededVal('section_env'),
-      section_social: typeof liveObj.section_social === 'number' ? liveObj.section_social : seededVal('section_social'),
-      section_gov: typeof liveObj.section_gov === 'number' ? liveObj.section_gov : seededVal('section_gov'),
-      section_comm: typeof liveObj.section_comm === 'number' ? liveObj.section_comm : seededVal('section_comm'),
+      visits: typeof liveObj.visits === 'number' ? liveObj.visits : (isDemoMode.value ? seededVal('visits') : 0),
+      contact_whatsapp: typeof liveObj.contact_whatsapp === 'number' ? liveObj.contact_whatsapp : (isDemoMode.value ? seededVal('contact_whatsapp') : 0),
+      contact_email: typeof liveObj.contact_email === 'number' ? liveObj.contact_email : (isDemoMode.value ? seededVal('contact_email') : 0),
+      contact_form_submit: typeof liveObj.contact_form_submit === 'number' ? liveObj.contact_form_submit : (isDemoMode.value ? seededVal('contact_form_submit') : 0),
+      download_book: typeof liveObj.download_book === 'number' ? liveObj.download_book : (isDemoMode.value ? seededVal('download_book') : 0),
+      newsletter_submit: typeof liveObj.newsletter_submit === 'number' ? liveObj.newsletter_submit : (isDemoMode.value ? seededVal('newsletter_submit') : 0),
+      section_env: typeof liveObj.section_env === 'number' ? liveObj.section_env : (isDemoMode.value ? seededVal('section_env') : 0),
+      section_social: typeof liveObj.section_social === 'number' ? liveObj.section_social : (isDemoMode.value ? seededVal('section_social') : 0),
+      section_gov: typeof liveObj.section_gov === 'number' ? liveObj.section_gov : (isDemoMode.value ? seededVal('section_gov') : 0),
+      section_comm: typeof liveObj.section_comm === 'number' ? liveObj.section_comm : (isDemoMode.value ? seededVal('section_comm') : 0),
     };
   });
 });
@@ -4646,7 +4663,7 @@ const triggerChartRender = () => {
   });
 };
 
-watch([filteredStats, chartType, () => store.darkMode], () => {
+watch([filteredStats, chartType, () => store.darkMode, isDemoMode], () => {
   triggerChartRender();
 }, { deep: true });
 
