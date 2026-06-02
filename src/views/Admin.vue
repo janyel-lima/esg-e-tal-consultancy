@@ -112,7 +112,7 @@
           <span v-else>Entrar</span>
         </button>
 
-        <div class="mt-6 pt-6 border-t space-y-3" :class="store.darkMode ? 'border-white/5' : 'border-slate-100'">
+        <div v-if="!isProd" class="mt-6 pt-6 border-t" :class="store.darkMode ? 'border-white/5' : 'border-slate-100'">
           <button 
             @click="bypassAuth" 
             class="w-full font-bold rounded-xl py-2 text-[11px] transition-all flex items-center justify-center gap-1.5 cursor-pointer border-none shadow-xs hover:scale-101 select-none"
@@ -121,10 +121,12 @@
             <i class="fa-solid fa-server"></i>
             <span>Avançar em Modo Offline</span>
           </button>
+        </div>
 
+        <div class="mt-4 text-center">
           <button 
             @click="showKeysModal = true" 
-            class="w-full bg-transparent hover:text-[#10B981] text-xs font-bold transition-colors flex items-center justify-center gap-1 cursor-pointer hover:underline border-none"
+            class="mx-auto bg-transparent hover:text-[#10B981] text-xs font-bold transition-colors flex items-center justify-center gap-1 cursor-pointer hover:underline border-none"
             :class="store.darkMode ? 'text-slate-500' : 'text-slate-400'"
           >
             <i class="fa-solid fa-key text-[10px]"></i>
@@ -3616,6 +3618,7 @@ import AdminResearchTab from '../components/admin/AdminResearchTab.vue';
 import AdminNavbarTab from '../components/admin/AdminNavbarTab.vue';
 
 const store = useEsgStore();
+const isProd = import.meta.env.PROD;
 
 // Advanced text editor overlay states and helpers
 const isAdvEditorOpen = ref(false);
