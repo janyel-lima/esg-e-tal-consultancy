@@ -21,11 +21,22 @@ let isConfigured = false;
 
 try {
   // Try loading credentials dynamically from localStorage if saved by developer,
+  // or use env variables during build (e.g. for GitHub Pages),
   // or use local emulator config dynamically in local dev mode.
   const storedConfig = localStorage.getItem('esg-firebase-config');
   const isDev = (import.meta as any).env?.DEV || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
   
-  const finalConfig = storedConfig ? JSON.parse(storedConfig) : (isDev ? firebaseConfig : null);
+  const envConfig = (import.meta as any).env?.VITE_FIREBASE_API_KEY ? {
+    apiKey: (import.meta as any).env.VITE_FIREBASE_API_KEY,
+    authDomain: (import.meta as any).env.VITE_FIREBASE_AUTH_DOMAIN,
+    databaseURL: (import.meta as any).env.VITE_FIREBASE_DATABASE_URL,
+    projectId: (import.meta as any).env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: (import.meta as any).env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: (import.meta as any).env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: (import.meta as any).env.VITE_FIREBASE_APP_ID
+  } : null;
+
+  const finalConfig = storedConfig ? JSON.parse(storedConfig) : (envConfig || (isDev ? firebaseConfig : null));
 
   if (finalConfig && finalConfig.apiKey) {
     if (getApps().length === 0) {

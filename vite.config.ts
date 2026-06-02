@@ -5,6 +5,7 @@ import path from 'path';
 
 export default defineConfig(() => {
   return {
+    base: process.env.GITHUB_ACTIONS === 'true' ? '/esg-e-tal-consultancy/' : './',
     plugins: [vue(), tailwindcss()],
     resolve: {
       alias: {

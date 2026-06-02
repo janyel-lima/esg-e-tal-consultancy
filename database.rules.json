@@ -1,0 +1,32 @@
+{
+  "rules": {
+    /* 
+      REGRAS DE SEGURANÇA PARA O PORTAL ESG E TAL
+      Garante conformidade com LGPD e proteção contra greenwashing corporativo.
+    */
+    "siteContent": {
+      // Público geral pode ler as notícias, áreas e blocos de conteúdo dinâmico
+      ".read": "true",
+      // Apenas administradores logados (autenticados) podem salvar alterações ou reordenar blocos
+      ".write": "auth != null"
+    },
+    
+    "newsletterSubscribers": {
+      // Apenas operadores do CRM (autenticados) podem listar todos os inscritos
+      ".read": "auth != null",
+      
+      "$subscriber_id": {
+        // Permitido que o próprio visitante consulte ou exclua sua assinatura (Opt-Out/LGPD).
+        // A chave $subscriber_id é o safeKey (um hash do email transformado do usuário).
+        ".read": "true",
+        ".write": "true"
+      }
+    },
+    
+    "newsletterConfig": {
+      // Configurações de API e tokens (ex: EmailJS) protegidas de leitura e escrita pública
+      ".read": "auth != null",
+      ".write": "auth != null"
+    }
+  }
+}
