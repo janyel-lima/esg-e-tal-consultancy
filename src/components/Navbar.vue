@@ -175,13 +175,13 @@ const navItems = computed(() => {
 
 const logoSrc = computed(() => {
   if (store.darkMode) {
-    return '/assets/logo_white.png?v=2';
+    return store.resolveAsset('/assets/logo_white.png?v=2');
   }
-  return scrollY.value > 60 ? '/assets/logo_dark.png?v=2' : '/assets/logo_white.png?v=2';
+  return scrollY.value > 60 ? store.resolveAsset('/assets/logo_dark.png?v=2') : store.resolveAsset('/assets/logo_white.png?v=2');
 });
 
 const mobileLogoSrc = computed(() => {
-  return store.darkMode ? '/assets/logo_white.png?v=2' : '/assets/logo_dark.png?v=2';
+  return store.darkMode ? store.resolveAsset('/assets/logo_white.png?v=2') : store.resolveAsset('/assets/logo_dark.png?v=2');
 });
 
 const handleScroll = () => {

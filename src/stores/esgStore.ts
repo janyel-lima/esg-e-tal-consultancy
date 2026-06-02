@@ -7,6 +7,27 @@ import {
   DynamicResearchItem, HeroStat, ToastMessage, NavbarItem 
 } from '../types';
 
+export function resolveAsset(path: string | undefined | null): string {
+  if (!path) return '';
+  const str = String(path).trim();
+  if (/^(https?:|\/\/|data:)/i.test(str)) {
+    return str;
+  }
+  let clean = str;
+  if (clean.startsWith('./')) {
+    clean = clean.substring(2);
+  }
+  if (clean.startsWith('/')) {
+    clean = clean.substring(1);
+  }
+  const baseUrl = import.meta.env.BASE_URL || './';
+  let base = baseUrl;
+  if (!base.endsWith('/')) {
+    base = base + '/';
+  }
+  return `${base}${clean}`;
+}
+
 // Let's bring high-fidelity native falling layouts representing original main.js data:
 const defaultAreasPt: AreaGroup = {
   env: {
@@ -388,7 +409,7 @@ export const useEsgStore = defineStore('esg', {
       };
 
       const sanitizeImagePath = (path: any, fallback: string): string => {
-        if (!path || typeof path !== 'string' || !path.trim() || path === 'null' || path === 'undefined') return fallback;
+        if (!path || typeof path !== 'string' || !path.trim() || path === 'null' || path === 'undefined') return resolveAsset(fallback);
         let resolved = path.trim();
         if (resolved.startsWith('http://') || resolved.startsWith('https://') || resolved.startsWith('data:') || resolved.startsWith('//')) {
           return resolved;
@@ -403,9 +424,9 @@ export const useEsgStore = defineStore('esg', {
           }
         }
         if (resolved.startsWith('/assets/') && !resolved.includes('?')) {
-          return `${resolved}?v=2`;
+          resolved = `${resolved}?v=2`;
         }
-        return resolved;
+        return resolveAsset(resolved);
       };
 
       return Object.entries(activeGroup).map(([key, value]) => {
@@ -455,7 +476,7 @@ export const useEsgStore = defineStore('esg', {
     sortedResearch(state): DynamicResearchItem[] {
       const defaultImg = '/assets/research_featured.jpg?v=2';
       const sanitizeImagePath = (path: any, fallback: string): string => {
-        if (!path || typeof path !== 'string' || !path.trim() || path === 'null' || path === 'undefined') return fallback;
+        if (!path || typeof path !== 'string' || !path.trim() || path === 'null' || path === 'undefined') return resolveAsset(fallback);
         let resolved = path.trim();
         if (resolved.startsWith('http://') || resolved.startsWith('https://') || resolved.startsWith('data:') || resolved.startsWith('//')) {
           return resolved;
@@ -470,9 +491,9 @@ export const useEsgStore = defineStore('esg', {
           }
         }
         if (resolved.startsWith('/assets/') && !resolved.includes('?')) {
-          return `${resolved}?v=2`;
+          resolved = `${resolved}?v=2`;
         }
-        return resolved;
+        return resolveAsset(resolved);
       };
 
       return [...state.dynamicResearch]
@@ -516,6 +537,10 @@ export const useEsgStore = defineStore('esg', {
     closeAreaModal() {
       this.activeModal = null;
       document.body.style.overflow = '';
+    },
+
+    resolveAsset(path: string | undefined | null): string {
+      return resolveAsset(path);
     },
 
     // ── Firebase Realtime Sync ────────────────────────────────────────────────

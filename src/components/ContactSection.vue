@@ -87,7 +87,7 @@
           <!-- Right Side: Majestic Showcase Image (Inspired by the old layout's clean visual framing) -->
           <div class="lg:col-span-5 relative group overflow-hidden rounded-2xl shadow-lg border border-neutral-200/10 dark:border-white/5 aspect-[4/3] w-full self-center">
             <img 
-              src="/assets/contact_bg.png?v=2" 
+              :src="store.resolveAsset('/assets/contact_bg.png?v=2')" 
               alt="Fale Conosco Image - ESG e Tal" 
               class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             />

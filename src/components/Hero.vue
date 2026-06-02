@@ -2,7 +2,7 @@
   <section 
     id="home" 
     class="relative min-h-screen flex items-center justify-center overflow-hidden bg-cover bg-center bg-[#070F1A]"
-    style="background-image: url('/assets/hero_bg.jpg?v=2'); background-position: top center;"
+    :style="{ backgroundImage: 'url(' + store.resolveAsset('/assets/hero_bg.jpg?v=2') + ')', backgroundPosition: 'top center' }"
   >
     <!-- Background Gradient Overlay -->
     <div class="absolute inset-0 bg-gradient-to-br from-[#040A14]/95 via-[#0A182A]/85 to-[#040A14]/70 z-10"></div>
@@ -25,7 +25,7 @@
       <!-- Logo Mark -->
       <div class="mb-8 animate-fade-up-1">
         <img 
-          src="/assets/logo_white.png?v=2" 
+          :src="store.resolveAsset('/assets/logo_white.png?v=2')" 
           alt="ESG e Tal Logo" 
           class="h-[44px] md:h-[54px] w-auto object-contain block"
         />

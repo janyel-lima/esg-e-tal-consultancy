@@ -57,7 +57,7 @@
       <div class="max-w-[1440px] mx-auto px-4 md:px-10 flex flex-col md:flex-row items-center justify-between gap-6">
         <div class="flex items-center gap-3">
           <img 
-            :src="store.darkMode ? '/assets/logo_white.png?v=2' : '/assets/logo_dark.png?v=2'" 
+            :src="store.darkMode ? store.resolveAsset('/assets/logo_white.png?v=2') : store.resolveAsset('/assets/logo_dark.png?v=2')" 
             alt="ESG e Tal Footer Logo" 
             class="h-6 w-auto object-contain transition-all duration-400"
             :class="store.darkMode ? 'opacity-70' : 'opacity-90'"

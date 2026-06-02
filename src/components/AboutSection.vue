@@ -3,7 +3,7 @@
     <!-- Visual Background layout with dynamic overlays -->
     <div 
       class="absolute inset-0 bg-cover bg-center z-0"
-      :style="{ backgroundImage: `url(${customBg || '/assets/hero_bg.jpg?v=2'})` }"
+      :style="{ backgroundImage: 'url(' + store.resolveAsset(customBg || '/assets/hero_bg.jpg?v=2') + ')' }"
     ></div>
 
     <div 
@@ -56,7 +56,7 @@
             <!-- Exquisite image layout matching the requested site photo -->
             <div class="md:col-span-5 relative group overflow-hidden rounded-xl shadow-lg border border-neutral-200/10 dark:border-white/5 aspect-[4/3] w-full self-center">
               <img 
-                src="/assets/purpose.jpg?v=2"
+                :src="store.resolveAsset('/assets/purpose.jpg?v=2')"
                 alt="ESG e Tal Purpose & Team"
                 class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
               />

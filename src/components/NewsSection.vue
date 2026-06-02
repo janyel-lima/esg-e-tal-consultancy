@@ -4,7 +4,7 @@
     <div 
       class="absolute inset-0 bg-cover bg-center z-0 transition-opacity duration-500"
       :class="store.darkMode ? 'opacity-35' : (customBg ? 'opacity-15' : 'opacity-0')"
-      :style="{ backgroundImage: `url(${customBg || '/assets/news_bg.jpg?v=2'})` }"
+      :style="{ backgroundImage: 'url(' + store.resolveAsset(customBg || '/assets/news_bg.jpg?v=2') + ')' }"
     ></div>
 
     <!-- Dual theme gradient overlay overlay -->
@@ -155,7 +155,7 @@
                     class="block opacity-90 hover:opacity-100 hover:scale-[1.02] transition-all"
                   >
                     <img 
-                      src="/assets/book_cover.png?v=2" 
+                      :src="store.resolveAsset('/assets/book_cover.png?v=2')" 
                       alt="Adquirir Obra" 
                       class="h-[38px] w-auto object-contain rounded-md shadow-sm"
                     />
