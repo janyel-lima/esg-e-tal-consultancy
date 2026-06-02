@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { db, auth, isConfigured } from '../firebase';
+import { db, auth, isConfigured, globalConfig } from '../firebase';
 import { ref as dbRef, onValue, set, update, remove, increment } from 'firebase/database';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { 
@@ -356,6 +356,65 @@ export const useEsgStore = defineStore('esg', {
     const sd = localStorage.getItem('esg-dark');
     const sl = localStorage.getItem('esg-lang');
 
+    // Restore metrics and database snapshots offline cache
+    const slMetrics = localStorage.getItem('esg-offline-metrics');
+    const slDailyMetrics = localStorage.getItem('esg-offline-daily-metrics');
+    const slNlConfig = localStorage.getItem('esg-offline-newsletter-config');
+
+    const defaultMetrics = {
+      visits: 0,
+      contact_whatsapp: 0,
+      contact_email: 0,
+      contact_form_submit: 0,
+      download_book: 0,
+      newsletter_submit: 0,
+      section_env: 0,
+      section_social: 0,
+      section_gov: 0,
+      section_comm: 0,
+    };
+
+    let cachedMetrics = defaultMetrics;
+    try {
+      if (slMetrics) {
+        cachedMetrics = { ...defaultMetrics, ...JSON.parse(slMetrics) };
+      }
+    } catch (e) {
+      console.warn("Could not parse offline metrics cache", e);
+    }
+
+    let cachedDailyMetrics = {};
+    try {
+      if (slDailyMetrics) {
+        cachedDailyMetrics = JSON.parse(slDailyMetrics);
+      }
+    } catch (e) {
+      console.warn("Could not parse offline daily metrics cache", e);
+    }
+
+    let cachedNlConfig = {};
+    try {
+      if (slNlConfig) {
+        cachedNlConfig = JSON.parse(slNlConfig);
+      }
+    } catch (e) {
+      console.warn("Could not parse offline newsletter config", e);
+    }
+
+    // Unify global config with stored ones
+    const activeNlConfig = {
+      provider: 'simulator',
+      serviceId: '',
+      templateId: '',
+      publicKey: '',
+      senderName: 'ESG e Tal',
+      welcomeTemplateId: '',
+      unsubscribeTemplateId: '',
+      newItemTemplateId: '',
+      ...cachedNlConfig,
+      ...(globalConfig.emailjs || {})
+    };
+
     return {
       lang: (sl === 'en' ? 'en' : 'pt') as 'pt' | 'en',
       darkMode: sd === null ? false : sd === 'true',
@@ -381,31 +440,11 @@ export const useEsgStore = defineStore('esg', {
 
       // Newsletter and CRM management
       subscribers: [] as { id: string; email: string; name: string; subscribed: boolean; createdAt: number; updatedAt: number }[],
-      newsletterConfig: {
-        provider: 'simulator', // 'simulator' | 'emailjs'
-        serviceId: '',
-        templateId: '',
-        publicKey: '',
-        senderName: 'ESG e Tal',
-        welcomeTemplateId: '',
-        unsubscribeTemplateId: '',
-        newItemTemplateId: '',
-      },
+      newsletterConfig: activeNlConfig,
 
       // Live tracked metrics for site visits and interactions
-      metrics: {
-        visits: 0,
-        contact_whatsapp: 0,
-        contact_email: 0,
-        contact_form_submit: 0,
-        download_book: 0,
-        newsletter_submit: 0,
-        section_env: 0,
-        section_social: 0,
-        section_gov: 0,
-        section_comm: 0,
-      },
-      dailyMetrics: {} as Record<string, Record<string, number>>,
+      metrics: cachedMetrics,
+      dailyMetrics: cachedDailyMetrics as Record<string, Record<string, number>>,
     };
   },
 
@@ -577,6 +616,14 @@ export const useEsgStore = defineStore('esg', {
       }
       this.dailyMetrics[dateStr][eventKey] = (this.dailyMetrics[dateStr][eventKey] || 0) + 1;
 
+      // Persist to offline cache persistently
+      try {
+        localStorage.setItem('esg-offline-metrics', JSON.stringify(this.metrics));
+        localStorage.setItem('esg-offline-daily-metrics', JSON.stringify(this.dailyMetrics));
+      } catch (err) {
+        console.warn("Could not save metrics to local storage:", err);
+      }
+
       if (!isConfigured || !db) {
         return;
       }
@@ -592,42 +639,41 @@ export const useEsgStore = defineStore('esg', {
     },
 
     resetMetrics() {
+      const emptyMetrics = {
+        visits: 0,
+        contact_whatsapp: 0,
+        contact_email: 0,
+        contact_form_submit: 0,
+        download_book: 0,
+        newsletter_submit: 0,
+        section_env: 0,
+        section_social: 0,
+        section_gov: 0,
+        section_comm: 0,
+      };
+
       if (!isConfigured || !db) {
-        this.metrics = {
-          visits: 0,
-          contact_whatsapp: 0,
-          contact_email: 0,
-          contact_form_submit: 0,
-          download_book: 0,
-          newsletter_submit: 0,
-          section_env: 0,
-          section_social: 0,
-          section_gov: 0,
-          section_comm: 0,
-        };
+        this.metrics = emptyMetrics;
         this.dailyMetrics = {};
-        this.addToast("Métricas zeradas no modo offline", "success");
+        
+        try {
+          localStorage.setItem('esg-offline-metrics', JSON.stringify(emptyMetrics));
+          localStorage.setItem('esg-offline-daily-metrics', JSON.stringify({}));
+        } catch (err) {
+          console.warn("Could not reset local storage metrics:", err);
+        }
+        
+        this.addToast("Métricas offline zeradas localmente com sucesso!", "success");
         return;
       }
       try {
         const metricsRef = dbRef(db, 'metrics');
-        set(metricsRef, {
-          visits: 0,
-          contact_whatsapp: 0,
-          contact_email: 0,
-          contact_form_submit: 0,
-          download_book: 0,
-          newsletter_submit: 0,
-          section_env: 0,
-          section_social: 0,
-          section_gov: 0,
-          section_comm: 0,
-        });
+        set(metricsRef, emptyMetrics);
 
         const dailyRef = dbRef(db, 'daily_metrics');
         set(dailyRef, null);
 
-        this.addToast("Todas as métricas foram zeradas com sucesso!", "success");
+        this.addToast("Todas as métricas foram zeradas com sucesso no Firebase!", "success");
       } catch (err) {
         console.error("Error resetting metrics:", err);
         this.addToast("Erro ao zerar métricas no Firebase.", "error");
@@ -1533,7 +1579,12 @@ export const useEsgStore = defineStore('esg', {
     async saveNewsletterConfig(config: any) {
       if (!isConfigured || !db) {
         this.newsletterConfig = { ...this.newsletterConfig, ...config };
-        this.addToast("Configuração salva na sessão local.", "info");
+        try {
+          localStorage.setItem('esg-offline-newsletter-config', JSON.stringify(config));
+        } catch (err) {
+          console.warn("Could not save newsletter config to localStorage:", err);
+        }
+        this.addToast("Configuração de e-mail salva no cache local!", "info");
         return;
       }
       try {

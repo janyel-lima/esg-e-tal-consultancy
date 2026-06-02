@@ -27,6 +27,30 @@
       // Configurações de API e tokens (ex: EmailJS) protegidas de leitura e escrita pública
       ".read": "auth != null",
       ".write": "auth != null"
+    },
+
+    "metrics": {
+      // Apenas administradores logados podem consultar o tráfego global
+      ".read": "auth != null",
+      
+      "$eventKey": {
+        // Visitantes anônimos podem apenas incrementar (+1) as métricas oficiais
+        ".write": "($eventKey === 'visits' || $eventKey === 'contact_whatsapp' || $eventKey === 'contact_email' || $eventKey === 'contact_form_submit' || $eventKey === 'download_book' || $eventKey === 'newsletter_submit' || $eventKey === 'section_env' || $eventKey === 'section_social' || $eventKey === 'section_gov' || $eventKey === 'section_comm') && (!data.exists() && newData.val() === 1 || data.exists() && newData.val() === data.val() + 1)",
+        ".validate": "newData.isNumber()"
+      }
+    },
+
+    "daily_metrics": {
+      // Apenas administradores logados podem ver a curva temporal de tráfego
+      ".read": "auth != null",
+      
+      "$date": {
+        "$eventKey": {
+          // Visitantes anônimos podem incrementar as métricas diárias com o mesmo crivo rígido
+          ".write": "($eventKey === 'visits' || $eventKey === 'contact_whatsapp' || $eventKey === 'contact_email' || $eventKey === 'contact_form_submit' || $eventKey === 'download_book' || $eventKey === 'newsletter_submit' || $eventKey === 'section_env' || $eventKey === 'section_social' || $eventKey === 'section_gov' || $eventKey === 'section_comm') && (!data.exists() && newData.val() === 1 || data.exists() && newData.val() === data.val() + 1)",
+          ".validate": "newData.isNumber()"
+        }
+      }
     }
   }
 }

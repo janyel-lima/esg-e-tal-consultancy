@@ -4422,7 +4422,7 @@ const customStartDate = ref('');
 const customEndDate = ref('');
 const chartCanvasRef = ref<HTMLCanvasElement | null>(null);
 let chartInstance: Chart | null = null;
-const isDemoMode = ref(!store.isConfigured);
+const isDemoMode = ref(false);
 
 const computedStatsForPeriod = computed(() => {
   const list = [];
@@ -5565,6 +5565,45 @@ const saveKeys = () => {
   }
   store.saveLocalConfig(credForm);
   showKeysModal.value = false;
+};
+
+const resetKeys = () => {
+  store.resetLocalConfig();
+};
+
+const exportSiteConfig = () => {
+  const config = {
+    firebase: {
+      apiKey: credForm.apiKey || "",
+      authDomain: credForm.authDomain || "",
+      databaseURL: credForm.databaseURL || "",
+      projectId: credForm.projectId || ""
+    },
+    emailjs: {
+      provider: tempConfig.provider || "simulator",
+      serviceId: tempConfig.serviceId || "",
+      templateId: tempConfig.templateId || "",
+      publicKey: tempConfig.publicKey || "",
+      senderName: tempConfig.senderName || "ESG e Tal",
+      welcomeTemplateId: tempConfig.welcomeTemplateId || "",
+      unsubscribeTemplateId: tempConfig.unsubscribeTemplateId || "",
+      newItemTemplateId: tempConfig.newItemTemplateId || ""
+    }
+  };
+
+  const jsonStr = JSON.stringify(config, null, 2);
+  const blob = new Blob([jsonStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'site-config.json';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+  
+  store.addToast("Arquivo site-config.json baixado com sucesso!", "ok");
 };
 
 // ── SAVE ACTIONS ──

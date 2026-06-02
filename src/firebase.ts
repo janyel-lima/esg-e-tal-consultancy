@@ -18,10 +18,32 @@ let app;
 let auth: any = null;
 let db: any = null;
 let isConfigured = false;
+let globalConfig: { firebase?: any; emailjs?: any } = {};
+
+try {
+  // Sync fetch site-config.json for production/hosting environments (e.g., GitHub Pages)
+  const baseUrl = import.meta.env.BASE_URL || '/';
+  const configPath = baseUrl.endsWith('/') ? baseUrl + 'site-config.json' : baseUrl + '/site-config.json';
+  
+  const xhr = new XMLHttpRequest();
+  xhr.open('GET', configPath, false); // Synchronous fetch
+  xhr.send(null);
+  
+  if (xhr.status === 200) {
+    const data = JSON.parse(xhr.responseText);
+    if (data) {
+      globalConfig = data;
+      console.log("[ESG e Tal] Global configurations loaded from site-config.json successfully.");
+    }
+  }
+} catch (configError) {
+  // Silent fallback if site-config.json is missing or inaccessible
+}
 
 try {
   // Try loading credentials dynamically from localStorage if saved by developer,
-  // or use env variables during build (e.g. for GitHub Pages),
+  // or use site-config.json from build/repository configuration,
+  // or use env variables during build,
   // or use local emulator config dynamically in local dev mode.
   const storedConfig = localStorage.getItem('esg-firebase-config');
   const isDev = import.meta.env.DEV || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
@@ -36,9 +58,11 @@ try {
     appId: import.meta.env.VITE_FIREBASE_APP_ID
   } : null;
 
-  const finalConfig = storedConfig ? JSON.parse(storedConfig) : (envConfig || (isDev ? firebaseConfig : null));
+  const finalConfig = storedConfig 
+    ? JSON.parse(storedConfig) 
+    : (globalConfig.firebase || envConfig || (isDev ? firebaseConfig : null));
 
-  if (finalConfig && finalConfig.apiKey) {
+  if (finalConfig && finalConfig.apiKey && !finalConfig.apiKey.includes('local-emulator-key')) {
     if (getApps().length === 0) {
       app = initializeApp(finalConfig);
     } else {
@@ -48,18 +72,25 @@ try {
     db = getDatabase(app);
     isConfigured = true;
 
-    // Connect to emulators if running in local dev mode
-    if (isDev) {
-      try {
-        connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
-        connectDatabaseEmulator(db, "127.0.0.1", 9000);
-        console.log("Firebase Emulators auto-negotiated: Auth (9099), Realtime Database (9000)");
-      } catch (emuError) {
-        console.warn("Firebase emulators already registered or failed to connect:", emuError);
-      }
-    }
-
     console.log("Firebase successfully initialized in ESG e Tal.");
+  } else if (isDev && finalConfig && finalConfig.apiKey) {
+    // Dev with emulator fallback
+    if (getApps().length === 0) {
+      app = initializeApp(finalConfig);
+    } else {
+      app = getApp();
+    }
+    auth = getAuth(app);
+    db = getDatabase(app);
+    isConfigured = true;
+
+    try {
+      connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
+      connectDatabaseEmulator(db, "127.0.0.1", 9000);
+      console.log("Firebase Emulators auto-negotiated: Auth (9099), Realtime Database (9000)");
+    } catch (emuError) {
+      console.warn("Firebase emulators already registered or failed to connect:", emuError);
+    }
   } else {
     console.warn("Firebase not configured yet. Running in high-fidelity offline mode.");
   }
@@ -67,4 +98,4 @@ try {
   console.error("Error setting up Firebase config:", error);
 }
 
-export { auth, db, isConfigured };
+export { auth, db, isConfigured, globalConfig };
