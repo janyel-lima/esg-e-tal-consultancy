@@ -1,0 +1,6 @@
+{
+  "name": "ESG e Tal Consultancy",
+  "description": "Consultoria corporativa especializada em Meio Ambiente, Responsabilidade Social, Governança e Comunicação Estratégica.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

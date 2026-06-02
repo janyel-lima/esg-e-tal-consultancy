@@ -1,0 +1,48 @@
+name: CI/CD Continuous Deployment
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-size: '20'
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Compile and Build Application
+        run: npm run build
+
+      # ── DEPLOYMENT STEP 1: GITHUB PAGES ──
+      - name: Deploy to GitHub Pages
+        if: github.event_name == 'push'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          force_orphan: true
+
+      # ── DEPLOYMENT STEP 2: FIREBASE HOSTING ──
+      - name: Deploy to Firebase Hosting
+        if: github.event_name == 'push'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_GRUPO_ESGETAL }}
+          projectId: grupo-esgetal
+          channelId: live
+        continue-on-error: true

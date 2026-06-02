@@ -1,0 +1,18 @@
+# Treat all file endings as auto by default
+* text=auto
+
+# Declare explicit binary types to prevent file corruption (newline translations)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.zip binary
+*.tar binary
+*.gz binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
